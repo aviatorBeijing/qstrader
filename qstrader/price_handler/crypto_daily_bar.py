@@ -63,7 +63,7 @@ class CryptoBarPriceHandler(AbstractBarPriceHandler):
         the specified CSV data directory, converting them into
         them into a pandas DataFrame, stored in a dictionary.
         """
-        ticker_path = os.path.join('..', 'data','crypto', "%s.csv" % ticker)
+        ticker_path = os.path.join("%s.csv" % ticker)
         if not os.path.exists( ticker_path):
             df = KlineWrapper.kline1day(ticker, self.start_date, self.end_date)
             #df = KlineWrapper.kline5min(ticker, self.start_date, self.end_date)
