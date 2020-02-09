@@ -10,7 +10,7 @@ import pandas as pd
 from ..price_parser import PriceParser
 from .base import AbstractBarPriceHandler
 from ..event import BarEvent
-from huobi.HuobiPublicServices import KlineWrapper
+from ..huobi import KlineWrapper
 
 import logging
 #FORMAT = "%(asctime)-15s %(clientip)s %(user)-8s %(message)s"
