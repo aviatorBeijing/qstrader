@@ -260,6 +260,166 @@ class TearsheetStatistics(Statistics):
         ax.axis([0, 10, 0, 10])
         return ax
 
+    def _plot_txt_time(self, stats, ax=None, **kwargs):
+        """
+        Outputs the statistics for various time frames.
+        """
+        def format_perc(x, pos):
+            return '%.0f%%' % x
+
+        returns = stats['returns']
+
+        if ax is None:
+            ax = plt.gca()
+
+        y_axis_formatter = FuncFormatter(format_perc)
+        ax.yaxis.set_major_formatter(FuncFormatter(y_axis_formatter))
+
+        mly_ret = perf.aggregate_returns(returns, 'monthly')
+        yly_ret = perf.aggregate_returns(returns, 'yearly')
+
+        mly_pct = mly_ret[mly_ret >= 0].shape[0] / float(mly_ret.shape[0])
+        mly_avg_win_pct = np.mean(mly_ret[mly_ret >= 0])
+        mly_avg_loss_pct = np.mean(mly_ret[mly_ret < 0])
+        mly_max_win_pct = np.max(mly_ret)
+        mly_max_loss_pct = np.min(mly_ret)
+        yly_pct = yly_ret[yly_ret >= 0].shape[0] / float(yly_ret.shape[0])
+        yly_max_win_pct = np.max(yly_ret)
+        yly_max_loss_pct = np.min(yly_ret)
+
+        ax.text(0.5, 8.9, 'Winning Months %', fontsize=8)
+        ax.text(9.5, 8.9, '{:.0%}'.format(mly_pct), fontsize=8, fontweight='bold',
+                horizontalalignment='right')
+
+        ax.text(0.5, 7.9, 'Average Winning Month %', fontsize=8)
+        ax.text(9.5, 7.9, '{:.2%}'.format(mly_avg_win_pct), fontsize=8, fontweight='bold',
+                color='red' if mly_avg_win_pct < 0 else 'green',
+                horizontalalignment='right')
+
+        ax.text(0.5, 6.9, 'Average Losing Month %', fontsize=8)
+        ax.text(9.5, 6.9, '{:.2%}'.format(mly_avg_loss_pct), fontsize=8, fontweight='bold',
+                color='red' if mly_avg_loss_pct < 0 else 'green',
+                horizontalalignment='right')
+
+        ax.text(0.5, 5.9, 'Best Month %', fontsize=8)
+        ax.text(9.5, 5.9, '{:.2%}'.format(mly_max_win_pct), fontsize=8, fontweight='bold',
+                color='red' if mly_max_win_pct < 0 else 'green',
+                horizontalalignment='right')
+
+        ax.text(0.5, 4.9, 'Worst Month %', fontsize=8)
+        ax.text(9.5, 4.9, '{:.2%}'.format(mly_max_loss_pct), fontsize=8, fontweight='bold',
+                color='red' if mly_max_loss_pct < 0 else 'green',
+                horizontalalignment='right')
+
+        ax.text(0.5, 3.9, 'Winning Years %', fontsize=8)
+        ax.text(9.5, 3.9, '{:.0%}'.format(yly_pct), fontsize=8, fontweight='bold',
+                horizontalalignment='right')
+
+        ax.text(0.5, 2.9, 'Best Year %', fontsize=8)
+        ax.text(9.5, 2.9, '{:.2%}'.format(yly_max_win_pct), fontsize=8,
+                fontweight='bold', color='red' if yly_max_win_pct < 0 else 'green',
+                horizontalalignment='right')
+
+        ax.text(0.5, 1.9, 'Worst Year %', fontsize=8)
+        ax.text(9.5, 1.9, '{:.2%}'.format(yly_max_loss_pct), fontsize=8,
+                fontweight='bold', color='red' if yly_max_loss_pct < 0 else 'green',
+                horizontalalignment='right')
+
+        # ax.text(0.5, 0.9, 'Positive 12 Month Periods', fontsize=8)
+        # ax.text(9.5, 0.9, num_trades, fontsize=8, fontweight='bold', horizontalalignment='right')
+
+        ax.set_title('Time', fontweight='bold')
+        ax.grid(False)
+        ax.spines['top'].set_linewidth(2.0)
+        ax.spines['bottom'].set_linewidth(2.0)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.get_xaxis().set_visible(False)
+        ax.set_ylabel('')
+        ax.set_xlabel('')
+
+        ax.axis([0, 10, 0, 10])
+        return ax
+
+    def _plot_txt_trade(self, stats, ax=None, **kwargs):
+        """
+        Outputs the statistics for the trades.
+        """
+        def format_perc(x, pos):
+            return '%.0f%%' % x
+
+        if ax is None:
+            ax = plt.gca()
+
+        if 'positions' not in stats:
+            num_trades = 0
+            win_pct = "N/A"
+            win_pct_str = "N/A"
+            avg_trd_pct = "N/A"
+            avg_win_pct = "N/A"
+            avg_loss_pct = "N/A"
+            max_win_pct = "N/A"
+            max_loss_pct = "N/A"
+        else:
+            pos = stats['positions']
+            num_trades = pos.shape[0]
+            win_pct = pos[pos["trade_pct"] > 0].shape[0] / float(num_trades)
+            win_pct_str = '{:.0%}'.format(win_pct)
+            avg_trd_pct = '{:.2%}'.format(np.mean(pos["trade_pct"]))
+            avg_win_pct = '{:.2%}'.format(np.mean(pos[pos["trade_pct"] > 0]["trade_pct"]))
+            avg_loss_pct = '{:.2%}'.format(np.mean(pos[pos["trade_pct"] <= 0]["trade_pct"]))
+            max_win_pct = '{:.2%}'.format(np.max(pos["trade_pct"]))
+            max_loss_pct = '{:.2%}'.format(np.min(pos["trade_pct"]))
+
+        y_axis_formatter = FuncFormatter(format_perc)
+        ax.yaxis.set_major_formatter(FuncFormatter(y_axis_formatter))
+
+        # TODO: Position class needs entry date
+        max_loss_dt = 'TBD'  # pos[pos["trade_pct"] == np.min(pos["trade_pct"])].entry_date.values[0]
+        avg_dit = '0.0'  # = '{:.2f}'.format(np.mean(pos.time_in_pos))
+
+        ax.text(0.5, 8.9, 'Trade Winning %', fontsize=8)
+        ax.text(9.5, 8.9, win_pct_str, fontsize=8, fontweight='bold', horizontalalignment='right')
+
+        ax.text(0.5, 7.9, 'Average Trade %', fontsize=8)
+        ax.text(9.5, 7.9, avg_trd_pct, fontsize=8, fontweight='bold', horizontalalignment='right')
+
+        ax.text(0.5, 6.9, 'Average Win %', fontsize=8)
+        ax.text(9.5, 6.9, avg_win_pct, fontsize=8, fontweight='bold', color='green', horizontalalignment='right')
+
+        ax.text(0.5, 5.9, 'Average Loss %', fontsize=8)
+        ax.text(9.5, 5.9, avg_loss_pct, fontsize=8, fontweight='bold', color='red', horizontalalignment='right')
+
+        ax.text(0.5, 4.9, 'Best Trade %', fontsize=8)
+        ax.text(9.5, 4.9, max_win_pct, fontsize=8, fontweight='bold', color='green', horizontalalignment='right')
+
+        ax.text(0.5, 3.9, 'Worst Trade %', fontsize=8)
+        ax.text(9.5, 3.9, max_loss_pct, color='red', fontsize=8, fontweight='bold', horizontalalignment='right')
+
+        ax.text(0.5, 2.9, 'Worst Trade Date', fontsize=8)
+        ax.text(9.5, 2.9, max_loss_dt, fontsize=8, fontweight='bold', horizontalalignment='right')
+
+        ax.text(0.5, 1.9, 'Avg Days in Trade', fontsize=8)
+        ax.text(9.5, 1.9, avg_dit, fontsize=8, fontweight='bold', horizontalalignment='right')
+
+        ax.text(0.5, 0.9, 'Trades', fontsize=8)
+        ax.text(9.5, 0.9, num_trades, fontsize=8, fontweight='bold', horizontalalignment='right')
+
+        ax.set_title('Trade', fontweight='bold')
+        ax.grid(False)
+        ax.spines['top'].set_linewidth(2.0)
+        ax.spines['bottom'].set_linewidth(2.0)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.get_xaxis().set_visible(False)
+        ax.set_ylabel('')
+        ax.set_xlabel('')
+
+        ax.axis([0, 10, 0, 10])
+        return ax
+
     def plot_results(self, filename=None):
         """
         Plot the Tearsheet
@@ -300,16 +460,18 @@ class TearsheetStatistics(Statistics):
         ax_monthly_returns = plt.subplot(gs[3, :2])
         ax_yearly_returns = plt.subplot(gs[3, 2])
         ax_txt_curve = plt.subplot(gs[4, 0])
-        # ax_txt_trade = plt.subplot(gs[4, 1])
-        # ax_txt_time = plt.subplot(gs[4, 2])
+        ax_txt_trade = plt.subplot(gs[4, 1])
+        ax_txt_time = plt.subplot(gs[4, 2])
 
         self._plot_equity(stats, bench_stats=bench_stats, ax=ax_equity)
         self._plot_drawdown(stats, ax=ax_drawdown)
         self._plot_monthly_returns(stats, ax=ax_monthly_returns)
         self._plot_yearly_returns(stats, ax=ax_yearly_returns)
         self._plot_txt_curve(stats, bench_stats=bench_stats, ax=ax_txt_curve)
-        # self._plot_txt_trade(stats, ax=ax_txt_trade)
-        # self._plot_txt_time(stats, ax=ax_txt_time)
+        self._plot_txt_trade(stats, ax=ax_txt_trade)
+        self._plot_txt_time(stats, ax=ax_txt_time)
 
         # Plot the figure
-        plt.show()
+        print('blocked for displaying ...')
+        plt.show(block=True)
+        print('exiting...')
