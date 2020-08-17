@@ -37,7 +37,8 @@ if __name__ == "__main__":
         end_dt,
         strategy_universe,
         strategy_alpha_model,
-        rebalance='end_of_month',
+        rebalance='weekly',
+        rebalance_weekday='FRI',
         long_only=True,
         cash_buffer_percentage=0.01,
         data_handler=data_handler
